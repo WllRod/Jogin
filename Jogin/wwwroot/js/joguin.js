@@ -56,6 +56,21 @@ container.addEventListener('mousemove', function (event) {
             }
         }
     })
+
+    var dots = document.querySelectorAll('.dot')
+
+    for (var i = 0; i < dots.length; i++) {
+        if (isCollide(player, dots[i])) {
+            container.removeChild(dots[i])
+            connection.invoke("EliminateDot", myID, dots[i].getAttribute("id"))
+            var size = parseInt(player.style.width) + 5
+            player.style.width = `${size}px`
+            player.style.height = `${size}px`
+
+            break;
+        }
+    }
+    
 })
 
 //Disable the send button until connection is established.
@@ -69,9 +84,24 @@ connection.start().then(function (e) {
     return console.error(err.toString());
 });
 
-connection.on("ReceiveMessage", function (e) {
+connection.on("DotsPosition", function (e) {
     var data = JSON.parse(e)
 
+    for (var i = 0; i < data.length; i++) {
+        var dot = document.createElement('div')
+        dot.classList.add('dot')
+        dot.setAttribute("id", data[i].Guid)
+
+        dot.style.left = `${data[i].posX}px`
+        dot.style.top = `${data[i].posY}px`
+
+        container.appendChild(dot)
+
+    }
+});
+connection.on("ReceiveMessage", function (e) {
+    var data = JSON.parse(e)
+    console.log(data)
     for (var i = 0; i < data.length; i++) {
         var player = document.createElement('div')
 
@@ -83,8 +113,8 @@ connection.on("ReceiveMessage", function (e) {
 
         player.classList.add('player')
 
-        if (myID !== data[i].Name) {
-            player.setAttribute("player-id", data[i].Name)
+        if (myID !== data[i].ConnectionID) {
+            player.setAttribute("player-id", data[i].ConnectionID)
         }
         else {
             player.setAttribute("player-id", myID)
@@ -96,6 +126,7 @@ connection.on("ReceiveMessage", function (e) {
 
 
 connection.on("MyId", function (e) {
+    console.log(e)
     myID = e;
 });
 
@@ -103,7 +134,7 @@ connection.on("EnemyPos", function (e) {
     var data = JSON.parse(e)
 
     for (var i = 0; i < data.length; i++) {
-        var player = document.querySelector(`.player[player-id="${data[i].Name}"]`)
+        var player = document.querySelector(`.player[player-id="${data[i].ConnectionID}"]`)
 
         player.style.left = `${data[i].posX}px`
         player.style.top = `${data[i].posY}px`
@@ -120,6 +151,15 @@ connection.on("ILost", function (e) {
     window.location.href = 'https://google.com'
 });
 
+connection.on("RemoveDot", function (dotId) {
+    var dot = document.getElementById(dotId)
+
+    container.removeChild(dot)
+})
+
+connection.on("RemovePlayer", function (enemyId) {
+    container.removeChild(document.querySelector(`.player[player-id="${enemyId}"]`))
+})
 function isCollide(a, b) {
     var aRect = a.getBoundingClientRect();
     var bRect = b.getBoundingClientRect();
