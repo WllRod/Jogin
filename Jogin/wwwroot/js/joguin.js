@@ -39,37 +39,37 @@ container.addEventListener('mousemove', function (event) {
 
     connection.invoke("PlayerPos", myID, mousePos.x, mousePos.y)
 
-    var players = document.querySelectorAll('.player')
+    //var players = document.querySelectorAll('.player')
 
-    players.forEach(item => {
-        var connectionID = item.getAttribute("player-id")
+    //players.forEach(item => {
+    //    var connectionID = item.getAttribute("player-id")
 
-        if (connectionID !== myID) {
-            if (isCollide(player, item)) {
-                connection.invoke("EliminatePlayer", myID, connectionID)
+    //    if (connectionID !== myID) {
+    //        if (isCollide(player, item)) {
+    //            connection.invoke("EliminatePlayer", myID, connectionID)
 
-                var size = parseInt(player.style.width)+5
-                player.style.width = `${size}px`
-                player.style.height = `${size}px`
+    //            var size = parseInt(player.style.width)+5
+    //            player.style.width = `${size}px`
+    //            player.style.height = `${size}px`
 
-                container.removeChild(item)
-            }
-        }
-    })
+    //            container.removeChild(item)
+    //        }
+    //    }
+    //})
 
-    var dots = document.querySelectorAll('.dot')
+    //var dots = document.querySelectorAll('.dot')
 
-    for (var i = 0; i < dots.length; i++) {
-        if (isCollide(player, dots[i])) {
-            container.removeChild(dots[i])
-            connection.invoke("EliminateDot", myID, dots[i].getAttribute("id"))
-            var size = parseInt(player.style.width) + 5
-            player.style.width = `${size}px`
-            player.style.height = `${size}px`
+    //for (var i = 0; i < dots.length; i++) {
+    //    if (isCollide(player, dots[i])) {
+    //        container.removeChild(dots[i])
+    //        connection.invoke("EliminateDot", myID, dots[i].getAttribute("id"))
+    //        var size = parseInt(player.style.width) + 5
+    //        player.style.width = `${size}px`
+    //        player.style.height = `${size}px`
 
-            break;
-        }
-    }
+    //        break;
+    //    }
+    //}
     
 })
 
@@ -84,6 +84,29 @@ connection.start().then(function (e) {
     return console.error(err.toString());
 });
 
+connection.on("IncreaseSize", function (e) {
+    var data = JSON.parse(e)
+    console.log(data)
+
+    var player = document.querySelector(`.player[player-id="${data.ConnectionID}"]`)
+    var size = parseInt(data.size)
+
+    player.style.width = `${size}px`;
+    player.style.height = `${size}px`;
+})
+
+connection.on("SingleDot", function (e) {
+    var data = JSON.parse(e)
+
+    var dot = document.createElement('div')
+    dot.classList.add('dot')
+    dot.setAttribute("id", data.Guid)
+
+    dot.style.left = `${data.posX}px`
+    dot.style.top = `${data.posY}px`
+
+    container.appendChild(dot)
+});
 connection.on("DotsPosition", function (e) {
     var data = JSON.parse(e)
 

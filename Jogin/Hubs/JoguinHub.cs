@@ -1,6 +1,7 @@
 ﻿using Jogin.Models;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using System.Drawing;
 
 namespace Jogin.Hubs
 {
@@ -19,7 +20,11 @@ namespace Jogin.Hubs
             {
                 DotsList = new List<DotsModel>();
 
-                for(int i = 0; i < 5; i++)
+            }
+
+            if(DotsList.Count < 10)
+            {
+                for (int i = 0; i < 15; i++)
                 {
                     DotsList.Add(new DotsModel());
                 }
@@ -57,6 +62,33 @@ namespace Jogin.Hubs
             Jogadores[index].posY = posY;
             Jogadores[index].posX = posX;
 
+            var playerRect = new Rectangle(
+                Jogadores[index].posX,
+                Jogadores[index].posY,
+                Jogadores[index].size,
+                Jogadores[index].size 
+            );
+
+            for(int i = 0; i < DotsList!.Count; i++)
+            {
+                var dotRect = new Rectangle(
+                    DotsList[i].posX,
+                    DotsList[i].posY,
+                    DotsList[i].size,
+                    DotsList[i].size
+                );
+
+                bool interSect = dotRect.IntersectsWith( playerRect );
+
+                if(interSect)
+                {
+                    await EliminateDot(id, DotsList[i].Guid.ToString());
+                    break;
+
+                }
+            }
+
+
             await EnemiesPosition(id);
         }
 
@@ -80,6 +112,19 @@ namespace Jogin.Hubs
             await EnemiesPosition(id);
 
             await ILost(enemyId);
+
+            //JogadoresModel? enemy = Jogadores?.FirstOrDefault(x => x.ConnectionID == enemyId);
+            //JogadoresModel? player = Jogadores?.FirstOrDefault(x => x.ConnectionID == id);
+
+            //int enemySize = enemy!.size;
+            //int playerIndex = Jogadores.IndexOf(player);
+
+            //Jogadores[playerIndex].size += enemySize;
+
+            //Jogadores.RemoveAt(Jogadores.IndexOf(enemy));
+
+            //await Clients.Client(id).SendAsync("IncreaseSize", Jogadores[playerIndex].size);
+            //await Clients.All.SendAsync("RemovePlayer", enemyId);
         }
 
         public async Task ILost(string id)
@@ -94,20 +139,24 @@ namespace Jogin.Hubs
 
         public async Task EliminateDot(string playerId, string dotId)
         {
-            int index = Jogadores!.FindIndex(x => x.ConnectionID == playerId);
-
-            Jogadores[index].size += 15;
+            await Clients.All.SendAsync("RemoveDot", dotId);
 
             DotsList!.RemoveAll(x => x.Guid.ToString() == dotId);
 
-            if(DotsList.Count < 10)
+            int index = Jogadores!.FindIndex(x => x.ConnectionID == playerId);
+
+            Jogadores[index].size += 5;
+
+            if (DotsList.Count < 10)
             {
-                DotsList.Add(new DotsModel());
+                DotsModel dt = new DotsModel();
+                DotsList.Add(dt);
+
+                await Clients.All.SendAsync("SingleDot", JsonConvert.SerializeObject(dt));
             }
 
-            await Clients.All.SendAsync("RemoveDot", dotId);
-
-            await Dots();
+            await Clients.All.SendAsync("IncreaseSize", JsonConvert.SerializeObject(Jogadores[index]));
+            
         }
     }
 }
