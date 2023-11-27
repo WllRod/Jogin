@@ -136,18 +136,40 @@ connection.on("ReceiveMessage", function (e) {
 
         player.classList.add('player')
 
+        var nome = document.createElement('span')
+        nome.innerText = data[i].Name;
+
         if (myID !== data[i].ConnectionID) {
             player.setAttribute("player-id", data[i].ConnectionID)
         }
         else {
             player.setAttribute("player-id", myID)
         }
-        
+
+        toastNotify(data[i].Name)
+
+        player.appendChild(nome)
+
         container.appendChild(player)
     }
 });
 
+const toastNotify = (name) => {
 
+    var toast = document.getElementById('clone-toast').cloneNode(true)
+    var containerPai = document.getElementById('container-toast')
+
+    var classeToast = `toast-${name}`
+
+    if (containerPai.querySelectorAll(`.${classeToast}`).length === 0) {
+        toast.querySelector('#toast-body').innerText = `O jogador ${name} entrou no jogo!`
+        toast.classList.add(classeToast)
+
+        document.getElementById('container-toast').appendChild(toast)
+
+        $(`.${classeToast}`).toast('show')
+    }
+}
 connection.on("MyId", function (e) {
     console.log(e)
     myID = e;

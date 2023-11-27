@@ -18,9 +18,12 @@ namespace Jogin.Controllers
             return View();
         }
 
-        public IActionResult Privacy()
+        [HttpPost]
+        public IActionResult Index(string username)
         {
-            return View();
+            HttpContext.Session.SetString("username", username);
+
+            return RedirectToAction("Index", "Jogo");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

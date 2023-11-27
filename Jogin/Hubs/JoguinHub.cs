@@ -47,7 +47,7 @@ namespace Jogin.Hubs
         {
             string clientId = Context.ConnectionId ?? "";
 
-            Jogadores.Add(new JogadoresModel() { Id = Jogadores.Count, ConnectionID = clientId });
+            Jogadores.Add(new JogadoresModel() { Id = Jogadores.Count, ConnectionID = clientId, Name = Context.GetHttpContext().Session.GetString("username") });
 
             await Clients.Client(clientId).SendAsync("MyID", clientId);
         }
